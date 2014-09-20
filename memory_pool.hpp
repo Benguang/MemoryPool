@@ -16,8 +16,6 @@ struct ListNode {
 	int next_node_index;
 };
 
-#define NIL -1
-
 template <typename T>
 class Factory {
 public:
@@ -42,19 +40,19 @@ private:
 	inline void remove_from_list(List &list, ListNode *node);
 
 	long list_to_index(ListNode const*ptr) {
-		return (ptr == NULL ? NIL : ptr - list_meta_data);
+		return (ptr == NULL ? -1 : ptr - list_meta_data);
 	}
 	
 	long mm_to_index(T const* ptr) {
-		return (ptr == NULL ? NIL : ptr - mm_pool);
+		return (ptr == NULL ? -1 : ptr - mm_pool);
 	}
 
 	ListNode *list_to_pointer(long index) {
-		return (index == NIL ? NULL : list_meta_data + index);
+		return (index == -1 ? NULL : list_meta_data + index);
 	}
 	
 	T *mm_to_pointer(long index) {
-		return (index == NIL ? NULL : mm_pool + index);
+		return (index == -1 ? NULL : mm_pool + index);
 	}
 	
 	bool check_mm_pointer_range(T const*ptr) {
@@ -70,15 +68,15 @@ private:
 	}
 	
 	ListNode *list_next_node(ListNode const*node) {
-		return (node->next_node_index == NIL ? NULL : list_to_pointer(node->next_node_index));
+		return (node->next_node_index == -1 ? NULL : list_to_pointer(node->next_node_index));
 	}
 	
 	ListNode *list_prev_node(ListNode const*node) {
-		return (node->prev_node_index == NIL ? NULL : list_to_pointer(node->prev_node_index));
+		return (node->prev_node_index == -1 ? NULL : list_to_pointer(node->prev_node_index));
 	}
 
 	void set_list_header(List &list, ListNode const* node) {
-		list.header_node_index  = (node == NULL ? NIL : list_to_index(node));
+		list.header_node_index  = (node == NULL ? -1 : list_to_index(node));
 	}
 	
 	ListNode *get_list_header(List const&list) {
@@ -120,8 +118,8 @@ Factory<T>::Factory(long capacity)
 		node->prev_node_index = i - 1;
 		node->next_node_index = i + 1;
 	}
-	list_to_pointer(0)->prev_node_index = NIL;
-	list_to_pointer(capacity-1)->next_node_index = NIL;
+	list_to_pointer(0)->prev_node_index = -1;
+	list_to_pointer(capacity-1)->next_node_index = -1;
 	set_list_header(mm_free, list_to_pointer(0));
 	set_list_header(mm_in_use, NULL);
 }
@@ -177,10 +175,10 @@ ListNode *Factory<T>::get_from_list(List &list)
 	if (header != NULL) {
 		ListNode *next_node = list_next_node(header);
 		if (next_node != NULL) {
-			next_node->prev_node_index = NIL;
+			next_node->prev_node_index = -1;
 		}
 		set_list_header(list, next_node);
-		header->prev_node_index = header->next_node_index = NIL;
+		header->prev_node_index = header->next_node_index = -1;
 	}
 	return header;
 }
@@ -189,7 +187,7 @@ template <typename T>
 void Factory<T>::put_to_list(List &list, ListNode *node) {
 	assert(node != NULL);
 	ListNode *header = get_list_header(list);
-	node->prev_node_index = NIL;
+	node->prev_node_index = -1;
 	node->next_node_index = list_to_index(header);
 	if (header != NULL) {
 		header->prev_node_index = list_to_index(node);
@@ -206,11 +204,11 @@ void Factory<T>::remove_from_list(List &list, ListNode *node)
 	}
 	assert(node != NULL);
 	
-	if (node->prev_node_index == NIL) {
+	if (node->prev_node_index == -1) {
 		assert(header == node);
 		ListNode *next_node = list_next_node(node);
 		if (next_node != NULL) {
-			next_node->prev_node_index = NIL;
+			next_node->prev_node_index = -1;
 		}
 		set_list_header(list, next_node);
 	}
@@ -224,7 +222,7 @@ void Factory<T>::remove_from_list(List &list, ListNode *node)
 			next_node->prev_node_index = list_to_index(prev_node);
 		}
 	}
-	node->prev_node_index = node->next_node_index = NIL;
+	node->prev_node_index = node->next_node_index = -1;
 }
 
 #endif /*__MEMORY_POOL_HPP*/
