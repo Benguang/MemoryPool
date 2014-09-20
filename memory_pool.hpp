@@ -55,7 +55,7 @@ public:
 
 private:
 	/**
-	 * Get a list node of the given list. 
+	 * Get a list node out of the given list. 
 	 */
 	inline ListNode *get_from_list(List &list);
 	
