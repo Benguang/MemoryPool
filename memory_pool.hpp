@@ -1,6 +1,7 @@
 #ifndef __MEMORY_POOL_HPP
 #define __MEMORY_POOL_HPP
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
 #include <pthread.h>
