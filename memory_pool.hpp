@@ -62,7 +62,7 @@ private:
 	/**
 	 * Put a list node into the given list.
 	 */
-	inline void put_to_list(List &list, ListNode *node);
+	inline void put_into_list(List &list, ListNode *node);
 	
 	/**
 	 * Remove a list node from the given list.
@@ -90,14 +90,14 @@ private:
 	/**
 	 * Get the pointer of a node, given its index
 	 */
-	ListNode *list_to_pointer(long index) {
+	ListNode *index_to_list_node(long index) {
 		return (index == -1 ? NULL : list_meta_data + index);
 	}
 	
 	/**
 	 * Get the object of an given index.
 	 */
-	T *mm_to_pointer(long index) {
+	T *index_to_mm_pointer(long index) {
 		return (index == -1 ? NULL : mm_pool + index);
 	}
 	
@@ -112,28 +112,28 @@ private:
 	 * Get the object of a given list node.
 	 */
 	T *list_to_mm_pointer(ListNode const*node) {
-		return mm_to_pointer(list_to_index(node));
+		return index_to_mm_pointer(list_to_index(node));
 	}
 	
 	/**
 	 * Get the list node of a given object. 
 	 */
 	ListNode *mm_to_list_pointer(T const*ptr) {
-		return list_to_pointer(mm_to_index(ptr));
+		return index_to_list_node(mm_to_index(ptr));
 	}
 
 	/**
 	 * Get the next node of a given list node.
 	 */	
 	ListNode *list_next_node(ListNode const*node) {
-		return (node->next_node_index == -1 ? NULL : list_to_pointer(node->next_node_index));
+		return (node->next_node_index == -1 ? NULL : index_to_list_node(node->next_node_index));
 	}
 	
 	/**
 	 * Get the previous node of a given list node.
 	 */
 	ListNode *list_prev_node(ListNode const*node) {
-		return (node->prev_node_index == -1 ? NULL : list_to_pointer(node->prev_node_index));
+		return (node->prev_node_index == -1 ? NULL : index_to_list_node(node->prev_node_index));
 	}
 
 	/**
@@ -147,7 +147,7 @@ private:
 	 * Get the header list node of a given list.
 	 */
 	ListNode *get_list_header(List const&list) {
-		return list_to_pointer(list.header_node_index);
+		return index_to_list_node(list.header_node_index);
 	}
 	
 private:
@@ -213,15 +213,15 @@ Factory<T>::Factory(long capacity)
 	
 	// Initialize the list list_meta_data for mm_free and mm_in_use
 	for (long i = 0; i < capacity; i++) {
-		ListNode *node = list_to_pointer(i);
+		ListNode *node = index_to_list_node(i);
 		assert(node != NULL);
 		node->used = false;
 		node->prev_node_index = i - 1;
 		node->next_node_index = i + 1;
 	}
-	list_to_pointer(0)->prev_node_index = -1;
-	list_to_pointer(capacity-1)->next_node_index = -1;
-	set_list_header(mm_free, list_to_pointer(0));
+	index_to_list_node(0)->prev_node_index = -1;
+	index_to_list_node(capacity-1)->next_node_index = -1;
+	set_list_header(mm_free, index_to_list_node(0));
 	set_list_header(mm_in_use, NULL);
 }
 
@@ -235,7 +235,7 @@ T *Factory<T>::produce() {
 	pthread_mutex_lock(&lock);
 	ListNode *node = get_from_list(mm_free);
 	if (node != NULL) {
-		put_to_list(mm_in_use, node);
+		put_into_list(mm_in_use, node);
 		node->used = true;
 		ptr = list_to_mm_pointer(node);
 		assert(ptr != NULL);
@@ -262,7 +262,7 @@ void Factory<T>::recycle(T* &ptr) {
 		if (node->used) {
 			ptr->~T();
 			remove_from_list(mm_in_use, node);
-			put_to_list(mm_free, node);
+			put_into_list(mm_free, node);
 			node->used = false;
 		} else {
 			printf("warning: The pointer 0x%p is recycled twice.\n", ptr);
@@ -299,7 +299,7 @@ ListNode *Factory<T>::get_from_list(List &list)
  * @return - void
  */
 template <typename T>
-void Factory<T>::put_to_list(List &list, ListNode *node) {
+void Factory<T>::put_into_list(List &list, ListNode *node) {
 	assert(node != NULL);
 	ListNode *header = get_list_header(list);
 	node->prev_node_index = -1;
